@@ -14,7 +14,7 @@ let chart;
 let people = [];
 let logs = [];
 
-// Sync from Firebase
+// Real-time listener
 db.ref('trackerData').on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
@@ -26,9 +26,9 @@ db.ref('trackerData').on('value', (snapshot) => {
 
 function addPerson() {
     const name = document.getElementById('newName').value.trim();
-    const goal = document.getElementById('newGoal').value || 0;
+    const goal = document.getElementById('newGoal').value;
     if (name) {
-        people.push({name, goal: parseFloat(goal)});
+        people.push({ name: name, goal: parseFloat(goal) || 0 });
         save();
         document.getElementById('newName').value = '';
         document.getElementById('newGoal').value = '';
@@ -38,35 +38,21 @@ function addPerson() {
 function addEntry() {
     const date = document.getElementById('dateInput').value;
     const note = document.getElementById('commentInput').value;
-    if (!date) return alert("Select a date");
+    if (!date) return alert("Please select a date");
 
-    const entry = { id: Date.now(), date, note, weights: {} };
+    let weightData = {};
     people.forEach(p => {
-        entry.weights[p.name] = document.getElementById(`in-${p.name}`).value || "0";
+        const val = document.getElementById(`in-${p.name}`).value;
+        weightData[p.name] = val || "0";
     });
 
-    logs.push(entry);
+    logs.push({ id: Date.now(), date: date, note: note, weights: weightData });
     logs.sort((a, b) => new Date(a.date) - new Date(b.date));
     save();
 }
 
-function editValue(logId, person, newVal) {
-    const log = logs.find(l => l.id === logId);
-    if (log) {
-        log.weights[person] = newVal;
-        save();
-    }
-}
-
 function save() {
     db.ref('trackerData').set({ people, logs });
-}
-
-function deleteRow(id) {
-    if(confirm("Delete this entry?")) {
-        logs = logs.filter(l => l.id !== id);
-        save();
-    }
 }
 
 function render() {
@@ -80,20 +66,22 @@ function render() {
         return `<div class="stat-card"><h4>${p.name}</h4><p>${(first - last).toFixed(1)}kg Lost</p></div>`;
     }).join('');
 
-    // 2. Inputs
+    // 2. Dynamic Input Boxes
     document.getElementById('dynamicInputs').innerHTML = people.map(p => 
-        `<div><label>${p.name}</label><input type="number" id="in-${p.name}" step="0.1" placeholder="0.0"></div>`).join('');
+        `<div><label>${p.name}</label><input type="number" id="in-${p.name}" placeholder="0.0" step="0.1"></div>`).join('');
 
     // 3. Table Header
-    document.getElementById('tableHeader').innerHTML = `<th>Date</th>` + people.map(p => `<th>${p.name.slice(0,3)}</th>`).join('') + `<th>Notes</th><th></th>`;
+    let headerHtml = `<th>Date</th>`;
+    people.forEach(p => headerHtml += `<th>${p.name.substring(0,3)}</th>`);
+    headerHtml += `<th>Note</th>`;
+    document.getElementById('tableHeader').innerHTML = headerHtml;
 
-    // 4. Table Body (Editable)
+    // 4. Table Rows
     document.getElementById('tableBody').innerHTML = logs.map(l => `
         <tr>
             <td>${l.date}</td>
-            ${people.map(p => `<td><input type="number" value="${l.weights[p.name]}" onchange="editValue(${l.id},'${p.name}',this.value)" style="width:50px; border:none; text-align:center; background:transparent;"></td>`).join('')}
+            ${people.map(p => `<td>${l.weights[p.name] || '-'}</td>`).join('')}
             <td>${l.note || '-'}</td>
-            <td><button class="del-btn" onclick="deleteRow(${l.id})">×</button></td>
         </tr>
     `).join('');
 
@@ -103,27 +91,32 @@ function render() {
 function renderChart() {
     const ctx = document.getElementById('weightChart').getContext('2d');
     if (chart) chart.destroy();
+    
     const colors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8E44AD'];
     const datasets = [];
-    
+
     people.forEach((p, i) => {
-        // Actual Line
+        const color = colors[i % colors.length];
+        
+        // Actual Weight Line
         datasets.push({
             label: p.name,
             data: logs.map(l => parseFloat(l.weights[p.name]) || null),
-            borderColor: colors[i % colors.length],
+            borderColor: color,
+            backgroundColor: color,
             tension: 0.3,
             spanGaps: true
         });
-        // Target/Goal Line (Dashed)
+
+        // Target Goal Line (Dashed)
         if (p.goal > 0) {
             datasets.push({
                 label: `${p.name} Target`,
                 data: Array(logs.length).fill(p.goal),
-                borderColor: colors[i % colors.length],
+                borderColor: color,
                 borderDash: [5, 5],
-                pointRadius: 0,
                 borderWidth: 1,
+                pointRadius: 0,
                 fill: false
             });
         }
@@ -131,11 +124,18 @@ function renderChart() {
 
     chart = new Chart(ctx, {
         type: 'line',
-        data: { labels: logs.map(l => l.date), datasets },
-        options: { responsive: true, maintainAspectRatio: false }
+        data: { labels: logs.map(l => l.date), datasets: datasets },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true, position: 'top' } }
+        }
     });
 }
 
 function clearAll() {
-    if(confirm("Erase EVERYTHING?")) { db.ref('trackerData').remove(); location.reload(); }
+    if(confirm("This will delete all shared cloud data. Continue?")) {
+        db.ref('trackerData').remove();
+        location.reload();
+    }
 }
