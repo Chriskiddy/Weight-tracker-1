@@ -1,55 +1,68 @@
-let myChart;
-let people = JSON.parse(localStorage.getItem('wPeople')) || ["Kevin", "Mohan", "Chris", "Sedhu"];
-let weights = JSON.parse(localStorage.getItem('wData')) || [];
+let chart;
+let people = JSON.parse(localStorage.getItem('pList')) || ["Kevin", "Mohan", "Chris", "Sedhu"];
+let logs = JSON.parse(localStorage.getItem('wLogs')) || [];
 
-window.onload = () => { renderAll(); };
+window.onload = () => { render(); };
 
 function addPerson() {
-    const name = document.getElementById('newName').value;
-    if (!name) return;
-    people.push(name);
-    localStorage.setItem('wPeople', JSON.stringify(people));
-    document.getElementById('newName').value = '';
-    renderAll();
+    const name = document.getElementById('newName').value.trim();
+    if (name) {
+        people.push(name);
+        localStorage.setItem('pList', JSON.stringify(people));
+        document.getElementById('newName').value = '';
+        render();
+    }
 }
 
 function addEntry() {
     const date = document.getElementById('dateInput').value;
-    if (!date) return alert("Select a date");
-    
-    const entry = { id: Date.now(), date: date, vals: {} };
+    const note = document.getElementById('commentInput').value;
+    if (!date) return alert("Please select a date");
+
+    const entry = { id: Date.now(), date: date, note: note, weights: {} };
     people.forEach(p => {
-        entry.vals[p] = document.getElementById(`in-${p}`).value || 0;
+        entry.weights[p] = document.getElementById(`in-${p}`).value || "0";
     });
 
-    weights.push(entry);
-    weights.sort((a, b) => new Date(a.date) - new Date(b.date));
-    localStorage.setItem('wData', JSON.stringify(weights));
-    renderAll();
+    logs.push(entry);
+    logs.sort((a, b) => new Date(a.date) - new Date(b.date));
+    localStorage.setItem('wLogs', JSON.stringify(logs));
+    document.getElementById('commentInput').value = '';
+    render();
 }
 
-function deleteEntry(id) {
-    weights = weights.filter(w => w.id !== id);
-    localStorage.setItem('wData', JSON.stringify(weights));
-    renderAll();
+function editValue(logId, person, newVal) {
+    const log = logs.find(l => l.id === logId);
+    if (log) {
+        log.weights[person] = newVal;
+        localStorage.setItem('wLogs', JSON.stringify(logs));
+        renderChart();
+    }
 }
 
-function renderAll() {
-    // Render Inputs
-    const inputDiv = document.getElementById('dynamicInputs');
-    inputDiv.innerHTML = people.map(p => `<div><label style="font-size:10px; font-weight:bold">${p}</label><input type="number" id="in-${p}" placeholder="0.0"></div>`).join('');
+function deleteRow(id) {
+    logs = logs.filter(l => l.id !== id);
+    localStorage.setItem('wLogs', JSON.stringify(logs));
+    render();
+}
 
-    // Render Table Header
-    const header = document.getElementById('tableHeader');
-    header.innerHTML = `<th>Date</th>` + people.map(p => `<th>${p.slice(0,3)}</th>`).join('') + `<th>Action</th>`;
+function render() {
+    // 1. Setup Inputs
+    document.getElementById('dynamicInputs').innerHTML = people.map(p => 
+        `<div><label style="font-size:11px">${p}</label><input type="number" id="in-${p}" step="0.1"></div>`).join('');
 
-    // Render Table Body
-    const tbody = document.getElementById('tableBody');
-    tbody.innerHTML = weights.map(w => `
+    // 2. Setup Header
+    const head = document.getElementById('tableHeader');
+    head.innerHTML = `<th>Date</th>` + people.map(p => `<th>${p}</th>`).join('') + `<th>Notes</th><th></th>`;
+
+    // 3. Setup Body
+    const body = document.getElementById('tableBody');
+    body.innerHTML = logs.map(l => `
         <tr>
-            <td>${w.date}</td>
-            ${people.map(p => `<td>${w.vals[p] || 0}</td>`).join('')}
-            <td><button class="del-btn" onclick="deleteEntry(${w.id})">Del</button></td>
+            <td>${l.date}</td>
+            ${people.map(p => `<td><input type="number" value="${l.weights[p]}" onchange="editValue(${l.id}, '${p}', this.value)" style="width:60px; border:none; text-align:center;"></td>`).join('')}
+            <td>${l.note || '-'}</td>
+            <td><button class="del-btn" onclick="deleteRow(${l.id})">X</button></td>
         </tr>
     `).join('');
 
@@ -58,20 +71,18 @@ function renderAll() {
 
 function renderChart() {
     const ctx = document.getElementById('weightChart').getContext('2d');
-    if (myChart) myChart.destroy();
+    if (chart) chart.destroy();
+    const colors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8E44AD'];
     
-    const colors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8E44AD', '#F39C12'];
-    
-    myChart = new Chart(ctx, {
+    chart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: weights.map(w => w.date),
+            labels: logs.map(l => l.date),
             datasets: people.map((p, i) => ({
                 label: p,
-                data: weights.map(w => w.vals[p] || 0),
+                data: logs.map(l => l.weights[p]),
                 borderColor: colors[i % colors.length],
-                fill: false,
-                tension: 0.3
+                tension: 0.1
             }))
         },
         options: { responsive: true, maintainAspectRatio: false }
@@ -79,8 +90,5 @@ function renderChart() {
 }
 
 function clearAll() {
-    if(confirm("Delete everything?")) {
-        localStorage.clear();
-        location.reload();
-    }
+    if(confirm("Erase all data?")) { localStorage.clear(); location.reload(); }
 }
