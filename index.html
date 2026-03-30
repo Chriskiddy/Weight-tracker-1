@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shared Weight Tracker</title>
+    <title>Group Weight Tracker</title>
     <link rel="stylesheet" href="Style.css">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -15,21 +15,21 @@
         
         <div id="statsSummary" class="stats-grid"></div>
 
-        <div class="graph-box">
-            <canvas id="weightChart"></canvas>
-        </div>
+        <div class="graph-box"><canvas id="weightChart"></canvas></div>
 
         <div class="input-card">
             <div class="row">
                 <input type="text" id="newName" placeholder="Name">
-                <input type="number" id="newGoal" placeholder="Goal" style="width: 80px;">
+                <input type="number" id="newGoal" placeholder="Target" style="width:80px">
                 <button onclick="addPerson()" class="blue-btn">Add</button>
             </div>
             <hr>
-            <input type="date" id="dateInput">
+            <div class="row">
+                <input type="date" id="dateInput">
+                <input type="text" id="commentInput" placeholder="Weekly Note">
+            </div>
             <div id="dynamicInputs" class="grid-inputs"></div>
-            <input type="text" id="commentInput" placeholder="Weekly Comment (Notes)">
-            <button onclick="addEntry()" class="green-btn">Sync to Cloud</button>
+            <button onclick="addEntry()" class="green-btn">Save Weekly Weights</button>
         </div>
 
         <div class="table-wrapper">
