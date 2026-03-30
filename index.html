@@ -4,20 +4,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weight Tracker</title>
     <link rel="stylesheet" href="Style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <h2>Weight Tracker</h2>
         <input type="date" id="dateInput">
+        
         <div class="grid-inputs">
-            <input type="number" id="p1" placeholder="P1">
-            <input type="number" id="p2" placeholder="P2">
-            <input type="number" id="p3" placeholder="P3">
-            <input type="number" id="p4" placeholder="P4">
+            <div><label>Kevin</label><input type="number" id="p1" placeholder="0.0"></div>
+            <div><label>Mohan</label><input type="number" id="p2" placeholder="0.0"></div>
+            <div><label>Chris</label><input type="number" id="p3" placeholder="0.0"></div>
+            <div><label>Sedhu</label><input type="number" id="p4" placeholder="0.0"></div>
         </div>
-        <button onclick="addEntry()">Add</button>
+        
+        <button onclick="addEntry()" id="addBtn">Add Weekly Entry</button>
+
+        <div class="graph-container">
+            <canvas id="weightChart"></canvas>
+        </div>
+
         <table id="weightTable">
-            <thead><tr><th>Date</th><th>P1</th><th>P2</th><th>P3</th><th>P4</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Kev</th><th>Moh</th><th>Chr</th><th>Sed</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
