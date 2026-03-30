@@ -1,42 +1,24 @@
-// Your specific Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyC-moUOBcXUPFrToivZo9w_Lh76iUuY_q8",
-  authDomain: "weight-tracker-926e8.firebaseapp.com",
-  databaseURL: "https://weight-tracker-926e8-default-rtdb.firebaseio.com",
-  projectId: "weight-tracker-926e8",
-  storageBucket: "weight-tracker-926e8.appspot.com",
-  messagingSenderId: "563065622359",
-  appId: "1:563065622359:web:35560965d83656972236a5"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
 let chart;
-let people = [];
-let logs = [];
+// Load data from phone memory
+let people = JSON.parse(localStorage.getItem('pList')) || [
+    {name: "Kevin", goal: 80}, 
+    {name: "Mohan", goal: 72}, 
+    {name: "Chris", goal: 77}, 
+    {name: "Sedhu", goal: 80}
+];
+let logs = JSON.parse(localStorage.getItem('wLogs')) || [];
 
-// LIVE SYNC: This function runs every time the cloud data changes
-db.ref('trackerData').on('value', (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-        people = data.people || ["Kevin", "Mohan", "Chris", "Sedhu"];
-        logs = data.logs || [];
-        render(); 
-    } else {
-        // First time setup if database is empty
-        people = ["Kevin", "Mohan", "Chris", "Sedhu"];
-        render();
-    }
-});
+window.onload = () => { render(); };
 
 function addPerson() {
     const name = document.getElementById('newName').value.trim();
+    const goal = document.getElementById('newGoal').value || 0;
     if (name) {
-        people.push(name);
-        saveToCloud();
+        people.push({name: name, goal: parseFloat(goal)});
+        save();
         document.getElementById('newName').value = '';
+        document.getElementById('newGoal').value = '';
+        render();
     }
 }
 
@@ -47,55 +29,56 @@ function addEntry() {
 
     const entry = { id: Date.now(), date: date, note: note, weights: {} };
     people.forEach(p => {
-        entry.weights[p] = document.getElementById(`in-${p}`).value || "0";
+        entry.weights[p.name] = document.getElementById(`in-${p.name}`).value || "0";
     });
 
     logs.push(entry);
     logs.sort((a, b) => new Date(a.date) - new Date(b.date));
-    saveToCloud();
+    save();
     document.getElementById('commentInput').value = '';
+    render();
 }
 
-function editValue(logId, person, newVal) {
+function editValue(logId, personName, newVal) {
     const log = logs.find(l => l.id === logId);
     if (log) {
-        log.weights[person] = newVal;
-        saveToCloud();
+        log.weights[personName] = newVal;
+        save();
+        renderChart();
     }
+}
+
+function save() {
+    localStorage.setItem('pList', JSON.stringify(people));
+    localStorage.setItem('wLogs', JSON.stringify(logs));
 }
 
 function deleteRow(id) {
-    if(confirm("Delete this entry for everyone?")) {
+    if(confirm("Delete this entry?")) {
         logs = logs.filter(l => l.id !== id);
-        saveToCloud();
+        save();
+        render();
     }
 }
 
-// Function to push data to Google's Cloud
-function saveToCloud() {
-    db.ref('trackerData').set({
-        people: people,
-        logs: logs
-    });
-}
-
 function render() {
-    // 1. Setup Inputs
+    // 1. Setup Input Boxes
     document.getElementById('dynamicInputs').innerHTML = people.map(p => 
-        `<div><label style="font-size:11px">${p}</label><input type="number" id="in-${p}" step="0.1" placeholder="0.0"></div>`).join('');
+        `<div><label style="font-size:11px; font-weight:bold;">${p.name}</label>
+         <input type="number" id="in-${p.name}" step="0.1" placeholder="0.0"></div>`).join('');
 
-    // 2. Setup Header
+    // 2. Setup Table Header
     const head = document.getElementById('tableHeader');
-    head.innerHTML = `<th>Date</th>` + people.map(p => `<th>${p.substring(0,3)}</th>`).join('') + `<th>Notes</th><th></th>`;
+    head.innerHTML = `<th>Date</th>` + people.map(p => `<th>${p.name.substring(0,3)}</th>`).join('') + `<th>Notes</th><th></th>`;
 
-    // 3. Setup Body
+    // 3. Setup Table Body
     const body = document.getElementById('tableBody');
     body.innerHTML = logs.map(l => `
         <tr>
             <td>${l.date}</td>
-            ${people.map(p => `<td><input type="number" value="${l.weights[p]}" onchange="editValue(${l.id}, '${p}', this.value)" style="width:50px; border:none; text-align:center; background:transparent;"></td>`).join('')}
+            ${people.map(p => `<td><input type="number" value="${l.weights[p.name]}" onchange="editValue(${l.id}, '${p.name}', this.value)" style="width:50px; border:none; text-align:center; background:transparent;"></td>`).join('')}
             <td>${l.note || '-'}</td>
-            <td><button class="del-btn" onclick="deleteRow(${l.id})" style="background:none; color:#ea4335; font-weight:bold; border:none;">X</button></td>
+            <td><button class="del-btn" onclick="deleteRow(${l.id})">×</button></td>
         </tr>
     `).join('');
 
@@ -107,31 +90,43 @@ function renderChart() {
     if (chart) chart.destroy();
     const colors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8E44AD'];
     
+    const datasets = [];
+    people.forEach((p, i) => {
+        const color = colors[i % colors.length];
+        // The Progress Line
+        datasets.push({
+            label: p.name,
+            data: logs.map(l => parseFloat(l.weights[p.name]) || null),
+            borderColor: color,
+            backgroundColor: color,
+            tension: 0.3,
+            spanGaps: true
+        });
+        // The Target Goal Line (Dashed)
+        if (p.goal > 0) {
+            datasets.push({
+                label: `${p.name} Goal`,
+                data: Array(logs.length).fill(p.goal),
+                borderColor: color,
+                borderDash: [5, 5],
+                pointRadius: 0,
+                borderWidth: 1,
+                fill: false
+            });
+        }
+    });
+
     chart = new Chart(ctx, {
         type: 'line',
-        data: {
-            labels: logs.map(l => l.date),
-            datasets: people.map((p, i) => ({
-                label: p,
-                data: logs.map(l => parseFloat(l.weights[p]) || null),
-                borderColor: colors[i % colors.length],
-                tension: 0.3,
-                spanGaps: true
-            }))
-        },
+        data: { labels: logs.map(l => l.date), datasets },
         options: { 
             responsive: true, 
             maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
-            }
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
         }
     });
 }
 
 function clearAll() {
-    if(confirm("This will erase data for EVERYONE in the group. Are you sure?")) {
-        db.ref('trackerData').remove();
-        location.reload();
-    }
+    if(confirm("Erase all data?")) { localStorage.clear(); location.reload(); }
 }
