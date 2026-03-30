@@ -2,38 +2,36 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weight Tracker</title>
+    <title>Weight Tracker Pro</title>
     <link rel="stylesheet" href="Style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <h2>Weight Tracker</h2>
-        <input type="date" id="dateInput">
         
-        <div class="grid-inputs">
-            <div><label>Kevin</label><input type="number" id="p1" placeholder="0.0"></div>
-            <div><label>Mohan</label><input type="number" id="p2" placeholder="0.0"></div>
-            <div><label>Chris</label><input type="number" id="p3" placeholder="0.0"></div>
-            <div><label>Sedhu</label><input type="number" id="p4" placeholder="0.0"></div>
+        <div class="setup-section">
+            <input type="text" id="newName" placeholder="Enter name">
+            <button onclick="addPerson()" class="btn-small">Add Person</button>
         </div>
-        
-        <button onclick="addEntry()" id="addBtn">Add Weekly Entry</button>
+
+        <div id="entryForm" class="entry-card">
+            <input type="date" id="dateInput">
+            <div id="dynamicInputs" class="grid-inputs"></div>
+            <button onclick="addEntry()" id="addBtn">Save Weekly Weights</button>
+        </div>
 
         <div class="graph-container">
             <canvas id="weightChart"></canvas>
         </div>
 
-        <table id="weightTable">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Kev</th><th>Moh</th><th>Chr</th><th>Sed</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+        <div class="table-scroll">
+            <table id="weightTable">
+                <thead><tr id="tableHeader"></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <button onclick="clearAll()" style="margin-top:20px; font-size:10px; opacity:0.5;">Clear All Data</button>
     </div>
     <script src="Script.js"></script>
 </body>
