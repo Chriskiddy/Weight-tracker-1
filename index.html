@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Weight & Progress Tracker</title>
     <link rel="stylesheet" href="Style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -26,7 +24,7 @@
             <input type="date" id="dateInput">
             <div id="dynamicInputs" class="grid-inputs"></div>
             <input type="text" id="commentInput" placeholder="Add a comment (e.g., Post-workout)">
-            <button onclick="addEntry()" class="green-btn">Sync to Cloud</button>
+            <button onclick="addEntry()" class="green-btn">Save Entry</button>
         </div>
 
         <div class="table-wrapper">
@@ -36,7 +34,7 @@
             </table>
         </div>
         
-        <button onclick="clearAll()" class="clear-btn">Reset All Shared Data</button>
+        <button onclick="clearAll()" class="clear-btn">Reset All Data</button>
     </div>
     <script src="Script.js"></script>
 </body>
