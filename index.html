@@ -3,28 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Weight & Progress Tracker</title>
+    <title>Shared Weight Tracker</title>
     <link rel="stylesheet" href="Style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <h2>Weight Tracker</h2>
-        
-        <div class="graph-box">
-            <canvas id="weightChart"></canvas>
-        </div>
+        <h2>Group Progress</h2>
+        <div id="statsSummary" class="stats-grid"></div>
+        <div class="graph-box"><canvas id="weightChart"></canvas></div>
 
         <div class="input-card">
             <div class="row">
-                <input type="text" id="newName" placeholder="New Person Name">
-                <button onclick="addPerson()" class="blue-btn">Add Person</button>
+                <input type="text" id="newName" placeholder="Name">
+                <input type="number" id="newGoal" placeholder="Goal" style="width:80px">
+                <button onclick="addPerson()" class="blue-btn">Add</button>
             </div>
             <hr>
             <input type="date" id="dateInput">
             <div id="dynamicInputs" class="grid-inputs"></div>
-            <input type="text" id="commentInput" placeholder="Add a comment (e.g., Post-workout)">
-            <button onclick="addEntry()" class="green-btn">Save Entry</button>
+            <input type="text" id="commentInput" placeholder="Weekly Comment">
+            <button onclick="addEntry()" class="green-btn">Sync to Cloud</button>
         </div>
 
         <div class="table-wrapper">
@@ -33,8 +34,6 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-        
-        <button onclick="clearAll()" class="clear-btn">Reset All Data</button>
     </div>
     <script src="Script.js"></script>
 </body>
