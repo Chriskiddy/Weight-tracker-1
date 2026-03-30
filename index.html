@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weight Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Weight Tracker</h2>
+        <input type="date" id="dateInput">
+        <div class="grid-inputs">
+            <input type="number" id="p1" placeholder="P1">
+            <input type="number" id="p2" placeholder="P2">
+            <input type="number" id="p3" placeholder="P3">
+            <input type="number" id="p4" placeholder="P4">
+        </div>
+        <button onclick="addEntry()">Add</button>
+        <table id="weightTable">
+            <thead><tr><th>Date</th><th>P1</th><th>P2</th><th>P3</th><th>P4</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
