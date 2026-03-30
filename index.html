@@ -12,19 +12,23 @@
 <body>
     <div class="container">
         <h2>Group Progress</h2>
+        
         <div id="statsSummary" class="stats-grid"></div>
-        <div class="graph-box"><canvas id="weightChart"></canvas></div>
+
+        <div class="graph-box">
+            <canvas id="weightChart"></canvas>
+        </div>
 
         <div class="input-card">
             <div class="row">
                 <input type="text" id="newName" placeholder="Name">
-                <input type="number" id="newGoal" placeholder="Goal" style="width:80px">
+                <input type="number" id="newGoal" placeholder="Goal" style="width: 80px;">
                 <button onclick="addPerson()" class="blue-btn">Add</button>
             </div>
             <hr>
             <input type="date" id="dateInput">
             <div id="dynamicInputs" class="grid-inputs"></div>
-            <input type="text" id="commentInput" placeholder="Weekly Comment">
+            <input type="text" id="commentInput" placeholder="Weekly Comment (Notes)">
             <button onclick="addEntry()" class="green-btn">Sync to Cloud</button>
         </div>
 
@@ -34,6 +38,8 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
+
+        <button onclick="clearAll()" class="clear-btn">Reset All Data</button>
     </div>
     <script src="Script.js"></script>
 </body>
